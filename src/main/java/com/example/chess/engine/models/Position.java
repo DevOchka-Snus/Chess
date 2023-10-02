@@ -1,11 +1,14 @@
 package com.example.chess.engine.models;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import com.example.chess.engine.ChessGame;
+import com.example.chess.engine.models.piece.Piece;
+import lombok.Getter;
+
+import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+@Getter
 public class Position {
     private int x;
     private int y;
@@ -18,7 +21,28 @@ public class Position {
         this.y = y;
     }
 
-    private static Position of(int x, int y) {
+    public static Position of(int x, int y) {
+        return new Position(x, y);
+    }
+
+    public static Position of(String s) {
+        if (!s.matches("(?i)[A-H][1-8]")) {
+            throw new IllegalArgumentException("Position invalid: " + s);
+        }
+
+        int x = switch (s.toLowerCase().charAt(0)) {
+            case 'a' -> 1;
+            case 'b' -> 2;
+            case 'c' -> 3;
+            case 'd' -> 4;
+            case 'e' -> 5;
+            case 'f' -> 6;
+            case 'g' -> 7;
+            case 'h' -> 8;
+            default -> throw new IllegalStateException("Unexpected value: " + s.toLowerCase().charAt(0));
+        };
+
+        int y = Integer.parseInt(s.substring(1));
         return new Position(x, y);
     }
 
@@ -38,8 +62,46 @@ public class Position {
         return x > 1 ? of(x - 1, y) : null;
     }
 
-    public Stream<Position> up() {
-        return Stream.iterate(this, Objects::nonNull, Position::upPosition).skip(1);
+    public Position diagDownLeftPosition() {
+        return move(Position::downPosition, Position::leftPosition);
+    }
+
+    public Position diagDownRightPosition() {
+        return move(Position::downPosition, Position::rightPosition);
+    }
+
+    public Position diagUpLeftPosition() {
+        return move(Position::upPosition, Position::leftPosition);
+    }
+
+    public Position diagUpRightPosition() {
+        return move(Position::upPosition, Position::rightPosition);
+    }
+
+    @SafeVarargs
+    private Position move(UnaryOperator<Position>... moves) {
+        Position finalPosition = this;
+        for (int i = 0; i < moves.length && (finalPosition != null); i++) {
+            UnaryOperator<Position> move = moves[i];
+            finalPosition = move.apply(finalPosition);
+        }
+        return finalPosition;
+    }
+
+    public List<Position> king() {
+        List<Position> moves = new ArrayList<>();
+        moves.add(upPosition());
+        moves.add(downPosition());
+        moves.add(leftPosition());
+        moves.add(rightPosition());
+        moves.add(diagDownLeftPosition());
+        moves.add(diagDownRightPosition());
+        moves.add(diagUpLeftPosition());
+        moves.add(diagUpRightPosition());
+
+        moves.removeIf(Objects::isNull);
+
+        return moves;
     }
 
     public List<Position> knight() {
@@ -58,15 +120,69 @@ public class Position {
         return moves;
     }
 
-    @SafeVarargs
-    private Position move(UnaryOperator<Position>... moves) {
-        Position finalPosition = this;
-        for (int i = 0; i < moves.length && (finalPosition != null); i++) {
-            UnaryOperator<Position> move = moves[i];
-            finalPosition = move.apply(finalPosition);
-        }
-        return finalPosition;
+    public List<Stream<Position>> bishop() {
+        return Arrays.asList(diagDownLeft(), diagDownRight(), diagUpLeft(), diagUpRight());
     }
 
+    public List<Stream<Position>> queen() {
+        List<Stream<Position>> moveLines = new ArrayList<>();
+        moveLines.addAll(rock());
+        moveLines.addAll(bishop());
 
+        return moveLines;
+    }
+
+    public List<Stream<Position>> rock() {
+        return Arrays.asList(up(), down(), left(), right());
+    }
+
+    public Stream<Position> up() {
+        return Stream.iterate(this, Objects::nonNull, Position::upPosition).skip(1);
+    }
+
+    private Stream<Position> right() {
+        return Stream.iterate(this, Objects::nonNull, Position::rightPosition).skip(1);
+    }
+
+    private Stream<Position> left() {
+        return Stream.iterate(this, Objects::nonNull, Position::leftPosition).skip(1);
+    }
+
+    private Stream<Position> down() {
+        return Stream.iterate(this, Objects::nonNull, Position::downPosition).skip(1);
+    }
+
+    private Stream<Position> diagUpRight() {
+        return Stream.iterate(this, Objects::nonNull, Position::diagUpRightPosition);
+    }
+
+    private Stream<Position> diagUpLeft() {
+        return Stream.iterate(this, Objects::nonNull, Position::diagUpLeftPosition);
+    }
+
+    private Stream<Position> diagDownRight() {
+        return Stream.iterate(this, Objects::nonNull, Position::diagDownRightPosition);
+    }
+
+    private Stream<Position> diagDownLeft() {
+        return Stream.iterate(this, Objects::nonNull, Position::diagDownLeftPosition);
+    }
+
+    public Set<Position> moveUntilHit(List<Stream<Position>> moveLines, ChessGame game, PieceColor pieceColor) {
+        Set<Position> validMoves = new HashSet<>();
+        moveLines.forEach(moveLine -> {
+            for (Position to : (Iterable<Position>) moveLine::iterator) {
+                Optional<Piece> pieceAtPosition = game.at(to);
+
+                if (pieceAtPosition.isEmpty() || pieceAtPosition.get().getPieceColor() != pieceColor) {
+                    validMoves.add(to);
+                }
+                if (pieceAtPosition.isPresent()) {
+                    break;
+                }
+            }
+        });
+
+        return validMoves;
+    }
 }

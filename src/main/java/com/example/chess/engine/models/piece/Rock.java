@@ -20,6 +20,6 @@ public class Rock extends Piece{
 
     @Override
     public Set<Position> validPieceMoves(ChessGame game) {
-        return null;
+        return position.moveUntilHit(position.rock(), game, pieceColor);
     }
 }

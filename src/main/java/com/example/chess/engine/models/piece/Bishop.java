@@ -20,6 +20,6 @@ public class Bishop extends Piece{
 
     @Override
     public Set<Position> validPieceMoves(ChessGame game) {
-        return null;
+        return position.moveUntilHit(position.bishop(), game, pieceColor);
     }
 }

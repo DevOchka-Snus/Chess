@@ -5,6 +5,7 @@ import com.example.chess.engine.models.PieceColor;
 import com.example.chess.engine.models.Position;
 import com.example.chess.engine.models.Type;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class Knight extends Piece{
@@ -20,6 +21,6 @@ public class Knight extends Piece{
 
     @Override
     public Set<Position> validPieceMoves(ChessGame game) {
-        return null;
+        return new HashSet<>(position.knight());
     }
 }

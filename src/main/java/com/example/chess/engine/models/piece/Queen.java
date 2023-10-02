@@ -19,6 +19,6 @@ public class Queen extends Piece{
 
     @Override
     public Set<Position> validPieceMoves(ChessGame game) {
-        return null;
+        return position.moveUntilHit(position.queen(), game, pieceColor);
     }
 }

@@ -1,13 +1,19 @@
 package com.example.chess.engine.models;
 
+import com.example.chess.api.models.PieceDto;
+import com.example.chess.engine.PieceMove;
+import com.example.chess.engine.models.piece.Pawn;
 import com.example.chess.engine.models.piece.Piece;
 import lombok.NoArgsConstructor;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @NoArgsConstructor
 public class Board implements Cloneable{
@@ -19,5 +25,118 @@ public class Board implements Cloneable{
                 .collect(Collectors.toMap(Piece::getPosition, Function.identity())));
         blackPieces.putAll(pieces.stream().filter(piece -> piece.getPieceColor() == PieceColor.BLACK)
                 .collect(Collectors.toMap(Piece::getPosition, Function.identity())));
+    }
+
+    public Optional<Piece> at(Position position) {
+        return whitePieces.containsKey(position)
+                ? Optional.of(whitePieces.get(position))
+                : Optional.ofNullable(blackPieces.get(position));
+    }
+
+    public Board applyMoveNoValidate(PieceMove pieceMove) {
+        Board cloned = this.clone();
+        if (isCastling(pieceMove)) {
+            cloned.applyCastling(pieceMove);
+        } else if (isEnPassant(pieceMove)) {
+            cloned.applyEnPassant(pieceMove);
+        } else {
+            cloned.applyStandartMove(pieceMove);
+        }
+
+        if (pieceMove.getPromotion() != null) {
+            cloned.applyPromotion(pieceMove);
+        }
+
+        return cloned;
+    }
+
+    private void applyPromotion(PieceMove pieceMove) {
+        PieceColor pieceColor = at(pieceMove.getTo()).orElseThrow().getPieceColor();
+        pieceMap(pieceColor).put(pieceMove.getTo(),
+                pieceMove.getPromotion().newPiece(pieceMove.getTo(), pieceColor));
+    }
+
+    private void applyStandartMove(PieceMove pieceMove) {
+        Position from = pieceMove.getFrom();
+        Position to = pieceMove.getTo();
+        PieceColor color = at(from).orElseThrow().getPieceColor();
+
+        Map<Position, Piece> playerPieces = pieceMap(color);
+        Map<Position, Piece> opponentPieces = pieceMap(color.negate());
+
+        opponentPieces.remove(to);
+        moveTo(playerPieces, from, to);
+    }
+
+    private void applyEnPassant(PieceMove pieceMove) {
+        PieceColor pieceColor = at(pieceMove.getFrom()).orElseThrow().getPieceColor();
+
+        UnaryOperator<Position> moveBackward = Pawn.MOVE_BACKWARD.get(pieceColor);
+        Position near = moveBackward.apply(pieceMove.getTo());
+
+        moveTo(pieceMap(pieceColor), pieceMove.getFrom(), pieceMove.getTo());
+        pieceMap(pieceColor.negate()).remove(near);
+    }
+
+    private boolean isEnPassant(PieceMove pieceMove) {
+        return at(pieceMove.getFrom()).orElseThrow().getPieceType() == Type.PAWN
+                && pieceMove.getFrom().getX() != pieceMove.getTo().getX()
+                && at(pieceMove.getTo()).isEmpty();
+    }
+
+    private void applyCastling(PieceMove pieceMove) {
+        var from = pieceMove.getFrom();
+        var to = pieceMove.getTo();
+        Position rockFrom;
+        Position rockTo;
+
+        if (to.getX() < from.getX()) {
+            rockFrom = to.leftPosition().leftPosition();
+            rockTo = to.rightPosition();
+        } else {
+            rockFrom = to.rightPosition();
+            rockTo = to.leftPosition();
+        }
+
+        PieceColor color = at(from).orElseThrow().getPieceColor();
+        Map<Position, Piece> playersPieces = pieceMap(color);
+
+        moveTo(playersPieces, from, to);
+        moveTo(playersPieces, rockFrom, rockTo);
+    }
+
+    private void moveTo(Map<Position, Piece> playersPieces, Position from, Position to) {
+        playersPieces.put(to, playersPieces.get(from).moveTo(to));
+        playersPieces.remove(from);
+    }
+
+    public Map<Position, Piece> pieceMap(PieceColor side) {
+        return side == PieceColor.WHITE ? whitePieces : blackPieces;
+    }
+
+    private boolean isCastling(PieceMove pieceMove) {
+        return at(pieceMove.getFrom()).orElseThrow().getPieceType() == Type.KING
+                && Math.abs(pieceMove.getFrom().getX() - pieceMove.getFrom().getY()) > 1;
+    }
+
+    @Override
+    protected Board clone() {
+        Board cloned = new Board();
+        cloned.whitePieces.putAll(whitePieces);
+        cloned.blackPieces.putAll(blackPieces);
+        return cloned;
+    }
+
+    public Collection<Piece> pieces(PieceColor negate) {
+        return Stream.of(whitePieces.values(), blackPieces.values())
+                .flatMap(Collection::stream).collect(Collectors.toList());
+    }
+
+    public Position king(PieceColor side) {
+        return pieces(side).stream()
+                .filter(p -> p.getPieceType() == Type.KING)
+                .findAny()
+                .map(Piece::getPosition)
+                .orElseThrow();
     }
 }
