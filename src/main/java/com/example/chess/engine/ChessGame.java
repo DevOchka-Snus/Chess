@@ -1,9 +1,13 @@
 package com.example.chess.engine;
 
+import com.example.chess.api.models.PieceDto;
+import com.example.chess.api.models.PieceTypeDto;
 import com.example.chess.engine.models.Board;
 import com.example.chess.engine.models.PieceColor;
 import com.example.chess.engine.models.Position;
+import com.example.chess.engine.models.Type;
 import com.example.chess.engine.models.piece.Piece;
+import com.example.chess.exceptions.InvalidMoveException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +26,12 @@ public class ChessGame {
     private PieceColor winner = null;
     private GameStatus status = GameStatus.NORMAL;
     private Map<Position, Set<Position>> validMovesForCurrentPlayer;
+
+    public static ChessGame start() {
+        ChessGame game = new ChessGame(PieceColor.WHITE, Collections.emptyList(), Collections.emptyList(), Board.startBoard());
+        game.validMovesForCurrentPlayer = game.validMovesForCurrentPlayer();
+        return game;
+    }
 
     public Optional<Piece> at(Position position) {
         return board.at(position);
@@ -84,5 +94,46 @@ public class ChessGame {
                         .flatMap(p -> p.validPieceMoves(this).stream())
                         .collect(Collectors.toSet());
         return attackPositions.contains(position);
+    }
+
+    public ChessGame applyMove(PieceMove pieceMove) {
+        ensureMoveValid(pieceMove);
+        ChessGame gameAfterMove = applyMoveNoValidate(pieceMove);
+        gameAfterMove.updateGameStatus();
+        return gameAfterMove;
+    }
+
+    private void ensureMoveValid(PieceMove pieceMove) {
+        Piece piece = at(pieceMove.getFrom()).orElseThrow(() -> new InvalidMoveException(
+                "No piece at position " + pieceMove.getFrom().toString()
+        ));
+        if (pieceMove.getPromotion() != null
+                && (piece.getPieceType() != Type.PAWN || pieceMove.getTo().getY() != 1
+                        && pieceMove.getTo().getY() != 8)) {
+            throw new InvalidMoveException("Promotion is only applicable to piece at finish line");
+        }
+
+        Set<Position> validMoves = piece.finallyValidMoves(this);
+        if (!validMoves.contains(pieceMove.getTo())) {
+            throw new InvalidMoveException("Piece is not allowed to be moved to: " + pieceMove.getTo().toString());
+        }
+    }
+
+    public List<PieceDto> calculatePieceDtos(boolean withValidMoves) {
+        return board.pieces()
+                .stream()
+                .map(p -> {
+                    PieceDto pieceDto = new PieceDto();
+                    pieceDto.setPieceType(PieceTypeDto.valueOf(p.getPieceType().toString()));
+                    pieceDto.setPosition(p.getPosition().toString());
+                    pieceDto.setColor(p.getPieceColor().toDto());
+                    if (withValidMoves) {
+                        if (validMovesForCurrentPlayer.containsKey(p.getPosition())) {
+                                pieceDto.setValidMoves(validMovesForCurrentPlayer.get(p.getPosition()).stream()
+                                        .map(Position::toString).collect(Collectors.toList()));
+                        }
+                    }
+                    return pieceDto;
+                }).collect(Collectors.toList());
     }
 }

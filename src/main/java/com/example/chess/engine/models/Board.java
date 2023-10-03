@@ -2,14 +2,10 @@ package com.example.chess.engine.models;
 
 import com.example.chess.api.models.PieceDto;
 import com.example.chess.engine.PieceMove;
-import com.example.chess.engine.models.piece.Pawn;
-import com.example.chess.engine.models.piece.Piece;
+import com.example.chess.engine.models.piece.*;
 import lombok.NoArgsConstructor;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -25,6 +21,50 @@ public class Board implements Cloneable{
                 .collect(Collectors.toMap(Piece::getPosition, Function.identity())));
         blackPieces.putAll(pieces.stream().filter(piece -> piece.getPieceColor() == PieceColor.BLACK)
                 .collect(Collectors.toMap(Piece::getPosition, Function.identity())));
+    }
+
+    public static Board startBoard() {
+        Board board = new Board();
+
+        Stream.iterate(Position.of(1, 2), Position::rightPosition).limit(8)
+                .forEach(p -> board.put(new Pawn(p, PieceColor.WHITE)));
+
+        Stream.iterate(Position.of(1, 7), Position::rightPosition).limit(8)
+                .forEach(p -> board.put(new Pawn(p, PieceColor.BLACK)));
+
+        board.put(new Rock(Position.of(1, 1), PieceColor.WHITE));
+        board.put(new Rock(Position.of(8, 1), PieceColor.WHITE));
+        board.put(new Rock(Position.of(1, 8), PieceColor.BLACK));
+        board.put(new Rock(Position.of(8, 8), PieceColor.BLACK));
+
+        board.put(new Knight(Position.of(2, 1), PieceColor.WHITE));
+        board.put(new Knight(Position.of(7, 1), PieceColor.WHITE));
+        board.put(new Knight(Position.of(2, 8), PieceColor.BLACK));
+        board.put(new Knight(Position.of(7, 8), PieceColor.BLACK));
+
+        board.put(new Bishop(Position.of(3, 1), PieceColor.WHITE));
+        board.put(new Bishop(Position.of(6, 1), PieceColor.WHITE));
+        board.put(new Bishop(Position.of(3, 8), PieceColor.BLACK));
+        board.put(new Bishop(Position.of(6, 8), PieceColor.BLACK));
+
+        board.put(new Queen(Position.of(4, 1), PieceColor.WHITE));
+        board.put(new Queen(Position.of(4, 8), PieceColor.BLACK));
+
+        board.put(new King(Position.of(5, 1), PieceColor.WHITE));
+        board.put(new King(Position.of(5, 8), PieceColor.BLACK));
+
+        return board;
+    }
+
+    private void put(Piece piece) {
+        switch (piece.getPieceColor()) {
+            case WHITE :
+                whitePieces.put(piece.getPosition(), piece);
+                break;
+            case BLACK :
+                blackPieces.put(piece.getPosition(), piece);
+                break;
+        }
     }
 
     public Optional<Piece> at(Position position) {
@@ -127,9 +167,13 @@ public class Board implements Cloneable{
         return cloned;
     }
 
-    public Collection<Piece> pieces(PieceColor negate) {
+    public Collection<Piece> pieces() {
         return Stream.of(whitePieces.values(), blackPieces.values())
                 .flatMap(Collection::stream).collect(Collectors.toList());
+    }
+
+    public Collection<Piece> pieces(PieceColor side) {
+        return side == PieceColor.WHITE ? whitePieces.values() : blackPieces.values();
     }
 
     public Position king(PieceColor side) {

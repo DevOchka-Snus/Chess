@@ -7,6 +7,8 @@ import com.example.chess.engine.models.Type;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 @Getter
 public class PieceMove {
@@ -25,5 +27,9 @@ public class PieceMove {
                 ? Type.valueOf(moveDto.getPromotion().toUpperCase())
                 : null;
         return new PieceMove(Position.of(moveDto.getFrom()), Position.of(moveDto.getTo()), promotion);
+    }
+
+    public MoveDto toDto() {
+        return new MoveDto(from.toString(), to.toString(), Optional.ofNullable(promotion).map(Enum::name).orElse(null));
     }
 }
