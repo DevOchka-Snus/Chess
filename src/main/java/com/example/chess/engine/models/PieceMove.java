@@ -1,9 +1,6 @@
-package com.example.chess.engine;
+package com.example.chess.engine.models;
 
 import com.example.chess.api.models.MoveDto;
-import com.example.chess.engine.models.PieceColor;
-import com.example.chess.engine.models.Position;
-import com.example.chess.engine.models.Type;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

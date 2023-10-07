@@ -1,8 +1,8 @@
 package com.example.chess.engine.models.piece;
 
 import com.example.chess.engine.ChessGame;
-import com.example.chess.engine.PieceMove;
 import com.example.chess.engine.models.PieceColor;
+import com.example.chess.engine.models.PieceMove;
 import com.example.chess.engine.models.Position;
 import com.example.chess.engine.models.Type;
 import lombok.Getter;

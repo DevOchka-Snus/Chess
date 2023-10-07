@@ -1,7 +1,5 @@
 package com.example.chess.engine.models;
 
-import com.example.chess.api.models.PieceDto;
-import com.example.chess.engine.PieceMove;
 import com.example.chess.engine.models.piece.*;
 import lombok.NoArgsConstructor;
 
@@ -56,14 +54,10 @@ public class Board implements Cloneable{
         return board;
     }
 
-    private void put(Piece piece) {
+    void put(Piece piece) {
         switch (piece.getPieceColor()) {
-            case WHITE :
-                whitePieces.put(piece.getPosition(), piece);
-                break;
-            case BLACK :
-                blackPieces.put(piece.getPosition(), piece);
-                break;
+            case WHITE -> whitePieces.put(piece.getPosition(), piece);
+            case BLACK -> blackPieces.put(piece.getPosition(), piece);
         }
     }
 
@@ -80,7 +74,7 @@ public class Board implements Cloneable{
         } else if (isEnPassant(pieceMove)) {
             cloned.applyEnPassant(pieceMove);
         } else {
-            cloned.applyStandartMove(pieceMove);
+            cloned.applyStandardMove(pieceMove);
         }
 
         if (pieceMove.getPromotion() != null) {
@@ -96,7 +90,7 @@ public class Board implements Cloneable{
                 pieceMove.getPromotion().newPiece(pieceMove.getTo(), pieceColor));
     }
 
-    private void applyStandartMove(PieceMove pieceMove) {
+    private void applyStandardMove(PieceMove pieceMove) {
         Position from = pieceMove.getFrom();
         Position to = pieceMove.getTo();
         PieceColor color = at(from).orElseThrow().getPieceColor();
@@ -156,7 +150,7 @@ public class Board implements Cloneable{
 
     private boolean isCastling(PieceMove pieceMove) {
         return at(pieceMove.getFrom()).orElseThrow().getPieceType() == Type.KING
-                && Math.abs(pieceMove.getFrom().getX() - pieceMove.getFrom().getY()) > 1;
+                && Math.abs(pieceMove.getFrom().getX() - pieceMove.getTo().getX()) > 1;
     }
 
     @Override

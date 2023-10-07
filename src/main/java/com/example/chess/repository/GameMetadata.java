@@ -2,7 +2,7 @@ package com.example.chess.repository;
 
 import com.example.chess.api.models.GameStateDto;
 import com.example.chess.engine.ChessGame;
-import com.example.chess.engine.PieceMove;
+import com.example.chess.engine.models.PieceMove;
 import com.example.chess.engine.models.GamePlayerDesc;
 import com.example.chess.engine.models.PieceColor;
 import lombok.Data;

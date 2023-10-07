@@ -2,6 +2,7 @@ package com.example.chess.engine.models;
 
 import com.example.chess.engine.ChessGame;
 import com.example.chess.engine.models.piece.Piece;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.*;
@@ -9,9 +10,10 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 @Getter
+@EqualsAndHashCode
 public class Position {
-    private int x;
-    private int y;
+    private final int x;
+    private final int y;
 
     public Position(int x, int y) {
         if (x < 1 || x > 8 || y < 1 || y > 8) {
@@ -47,19 +49,19 @@ public class Position {
     }
 
     public Position upPosition() {
-        return y < 8 ? of(x, y + 1) : null;
+        return (y < 8) ? of(x, y + 1) : null;
     }
 
     public Position downPosition() {
-        return y > 1 ? of(x, y - 1) : null;
+        return (y > 1) ? of(x, y - 1) : null;
     }
 
     public Position rightPosition() {
-        return x < 8 ? of(x + 1, y) : null;
+        return (x < 8) ? of(x + 1, y) : null;
     }
 
     public Position leftPosition() {
-        return x > 1 ? of(x - 1, y) : null;
+        return (x > 1) ? of(x - 1, y) : null;
     }
 
     public Position diagDownLeftPosition() {
@@ -153,19 +155,19 @@ public class Position {
     }
 
     private Stream<Position> diagUpRight() {
-        return Stream.iterate(this, Objects::nonNull, Position::diagUpRightPosition);
+        return Stream.iterate(this, Objects::nonNull, Position::diagUpRightPosition).skip(1);
     }
 
     private Stream<Position> diagUpLeft() {
-        return Stream.iterate(this, Objects::nonNull, Position::diagUpLeftPosition);
+        return Stream.iterate(this, Objects::nonNull, Position::diagUpLeftPosition).skip(1);
     }
 
     private Stream<Position> diagDownRight() {
-        return Stream.iterate(this, Objects::nonNull, Position::diagDownRightPosition);
+        return Stream.iterate(this, Objects::nonNull, Position::diagDownRightPosition).skip(1);
     }
 
     private Stream<Position> diagDownLeft() {
-        return Stream.iterate(this, Objects::nonNull, Position::diagDownLeftPosition);
+        return Stream.iterate(this, Objects::nonNull, Position::diagDownLeftPosition).skip(1);
     }
 
     public Set<Position> moveUntilHit(List<Stream<Position>> moveLines, ChessGame game, PieceColor pieceColor) {
@@ -184,19 +186,6 @@ public class Position {
         });
 
         return validMoves;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Position position = (Position) o;
-        return x == position.x && y == position.y;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(x, y);
     }
 
     @Override

@@ -28,19 +28,19 @@ public class GameController {
     private final GameService service;
 
     @GetMapping("/sample")
-    public GameStateDto gameStateDto() {
+    public GameStateDto gameStateSample() {
         GameStateDto gameStateDto = new GameStateDto();
         gameStateDto.setCurrentPlayer(ColorDto.WHITE);
         PieceDto pawn1 = new PieceDto();
         pawn1.setColor(ColorDto.WHITE);
         pawn1.setPieceType(PieceTypeDto.PAWN);
-        pawn1.setPosition("e2");
-        pawn1.setValidMoves(Arrays.asList("e3", "e4"));
+        pawn1.setPosition("E2");
+        pawn1.setValidMoves(Arrays.asList("E3", "E4"));
 
         PieceDto pawnBlack = new PieceDto();
         pawnBlack.setColor(ColorDto.BLACK);
         pawnBlack.setPieceType(PieceTypeDto.PAWN);
-        pawnBlack.setPosition("f7");
+        pawnBlack.setPosition("F7");
 
         gameStateDto.setPieces(Arrays.asList(pawn1, pawnBlack));
 
@@ -48,7 +48,7 @@ public class GameController {
     }
 
     @PostMapping("/{id}/move")
-    public ResponseEntity<?> makeMove(@RequestHeader("ptoken") String playerToken,
+    public ResponseEntity<GameStateDto> makeMove(@RequestHeader("ptoken") String playerToken,
                                       @PathVariable("id") String id,
                                       @RequestBody MoveDto moveDto) {
         log.debug("move {} {} {}", id, playerToken, moveDto);
@@ -61,7 +61,7 @@ public class GameController {
     }
 
     @PostMapping("/{id}/join")
-    public ResponseEntity<?> join(@PathVariable("id") String id) {
+    public ResponseEntity<GameConnectionParamsDto> join(@PathVariable("id") String id) {
         log.debug("join {} ", id);
 
         GameMetadata metadata = service.joinGame(id);
@@ -71,7 +71,7 @@ public class GameController {
     }
 
     @PostMapping("/host")
-    public ResponseEntity<?> host() {
+    public ResponseEntity<GameConnectionParamsDto> host() {
         GameMetadata metadata = service.newGame();
         String whitePlayerToken = metadata.getPlayerTokens().get(PieceColor.WHITE);
 
@@ -81,7 +81,7 @@ public class GameController {
     }
 
     @PostMapping("/{id}/wait-for-my-move")
-    public DeferredResult<?> waitForMove(@RequestHeader("ptoken") String playerToken,
+    public DeferredResult<Object> waitForMove(@RequestHeader("ptoken") String playerToken,
                                          @PathVariable("id") String id) {
         log.debug("await move {} {}", id, playerToken);
 
@@ -108,17 +108,17 @@ public class GameController {
     }
 
     @ExceptionHandler(GameNotFoundException.class)
-    public ResponseEntity<?> handleNotFound() {
+    public ResponseEntity<Object> handleNotFound() {
         return new ResponseEntity<Object>("game not found", new HttpHeaders(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(InvalidMoveException.class)
-    public ResponseEntity<?> handleInvalidMove() {
+    public ResponseEntity<Object> handleInvalidMove() {
         return new ResponseEntity<Object>("bad move", new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<?> handleInvalidToken() {
+    public ResponseEntity<Object> handleInvalidToken() {
         return new ResponseEntity<Object>("bad token", new HttpHeaders(), HttpStatus.FORBIDDEN);
     }
 }

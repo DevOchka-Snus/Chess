@@ -7,6 +7,7 @@ import com.example.chess.engine.models.PieceColor;
 import com.example.chess.engine.models.Position;
 import com.example.chess.engine.models.Type;
 import com.example.chess.engine.models.piece.Piece;
+import com.example.chess.engine.models.PieceMove;
 import com.example.chess.exceptions.InvalidMoveException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -66,7 +67,7 @@ public class ChessGame {
         boolean kingAttacked = kingUnderAttack(currentPlayer);
         boolean canMove = validMovesForCurrentPlayer.values().stream().anyMatch(s -> !s.isEmpty());
 
-        if (kingAttacked && canMove) {
+        if (canMove && kingAttacked) {
             status = GameStatus.CHECK;
         }
         if (!canMove && kingAttacked) {
@@ -124,7 +125,7 @@ public class ChessGame {
                 .stream()
                 .map(p -> {
                     PieceDto pieceDto = new PieceDto();
-                    pieceDto.setPieceType(PieceTypeDto.valueOf(p.getPieceType().toString()));
+                    pieceDto.setPieceType(PieceTypeDto.valueOf(p.getPieceType().name()));
                     pieceDto.setPosition(p.getPosition().toString());
                     pieceDto.setColor(p.getPieceColor().toDto());
                     if (withValidMoves) {

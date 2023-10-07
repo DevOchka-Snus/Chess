@@ -1,8 +1,8 @@
 package com.example.chess.engine.models.piece;
 
 import com.example.chess.engine.ChessGame;
-import com.example.chess.engine.PieceMove;
 import com.example.chess.engine.models.PieceColor;
+import com.example.chess.engine.models.PieceMove;
 import com.example.chess.engine.models.Position;
 import com.example.chess.engine.models.Type;
 
@@ -88,7 +88,7 @@ public class Pawn extends Piece{
         for (Position forwardAttack : new Position[] {fl, fr}) {
             if (forwardAttack != null) {
                 Position near = moveBackward.apply(forwardAttack);
-                Position nearFrom = moveBackward.apply(forwardAttack);
+                Position nearFrom = moveForward.apply(forwardAttack);
 
                 PieceMove lastOppMove = game.getPreviousMoves().get(game.getPreviousMoves().size() - 1);
                 if (game.at(near).map(p -> p.getPieceType() == Type.PAWN && p.pieceColor != pieceColor).orElse(false)

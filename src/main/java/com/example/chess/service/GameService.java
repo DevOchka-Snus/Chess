@@ -1,7 +1,7 @@
 package com.example.chess.service;
 
 import com.example.chess.api.models.MoveDto;
-import com.example.chess.engine.PieceMove;
+import com.example.chess.engine.models.PieceMove;
 import com.example.chess.engine.models.GamePlayerDesc;
 import com.example.chess.exceptions.GameNotFoundException;
 import com.example.chess.exceptions.InvalidTokenException;
